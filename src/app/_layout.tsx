@@ -1,16 +1,21 @@
 import { useFonts } from '@hooks/useFonts'
 import { StatusBar, View } from 'react-native'
-import { GluestackUIProvider, Text } from '@gluestack-ui/themed'
+import { Center, GluestackUIProvider, Text } from '@gluestack-ui/themed'
+import { config } from '../../config/gluestack-ui.config'
 
 export default function RootLayout() {
   const fontsLoaded = useFonts()
 
   return (
-    <GluestackUIProvider>
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <StatusBar backgroundColor="transparent" translucent />
-        {fontsLoaded ? <Text>Home</Text> : <View />}
-      </View>
+    <GluestackUIProvider config={config}>
+      <StatusBar backgroundColor="transparent" translucent />
+      {fontsLoaded ? (
+        <Center flex={1} bg="$background">
+          <Text fontSize={'$title_md'}>Home</Text>
+        </Center>
+      ) : (
+        <View />
+      )}
     </GluestackUIProvider>
   )
 }
