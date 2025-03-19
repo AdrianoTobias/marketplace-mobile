@@ -1,10 +1,19 @@
+import { router } from 'expo-router'
 import { Center, Heading, ScrollView, Text, VStack } from '@gluestack-ui/themed'
 import Logo from '@assets/logo.svg'
 import { Input } from '@components/Input'
 import { Button } from '@components/Button'
 import { Mail, KeyRound, MoveRight } from 'lucide-react-native'
 
-export default function SignInScreen() {
+export default function SignInASDScreen() {
+  function handleSignIn() {
+    router.replace('/(tabs)')
+  }
+
+  function handleSignUp() {
+    router.navigate('/auth/sign-up')
+  }
+
   return (
     <ScrollView width={'$full'} showsVerticalScrollIndicator={false}>
       <VStack flex={1} width={'$full'} bg="$white">
@@ -46,7 +55,7 @@ export default function SignInScreen() {
             />
           </Center>
 
-          <Button title="Acessar" icon={MoveRight} />
+          <Button title="Acessar" icon={MoveRight} onPress={handleSignIn} />
         </VStack>
 
         <VStack flex={1} px={'$10'} gap={20} marginTop={140} marginBottom="$2">
@@ -54,7 +63,12 @@ export default function SignInScreen() {
             Ainda não tem uma conta?
           </Text>
 
-          <Button title="Cadastrar" icon={MoveRight} variant="outline" />
+          <Button
+            title="Cadastrar"
+            icon={MoveRight}
+            variant="outline"
+            onPress={handleSignUp}
+          />
         </VStack>
       </VStack>
     </ScrollView>
