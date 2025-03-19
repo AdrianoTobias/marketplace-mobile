@@ -49,6 +49,7 @@ export default function SignUpScreen() {
               id="phone"
               icon={Phone}
               placeholder="(00) 00000-0000"
+              keyboardType="phone-pad"
             />
           </Center>
 
