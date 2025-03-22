@@ -1,20 +1,30 @@
 import { router } from 'expo-router'
+import { useState } from 'react'
 import { TouchableOpacity, FlatList } from 'react-native'
 import { Icon, Text, View } from '@gluestack-ui/themed'
 import { UserPhoto } from '@components/UserPhoto'
 import { Input } from '@components/Input'
 import { ProductCard } from '@components/ProductCard'
+import { Modal } from '@components/Modal'
 import { MoveRight, Search, Filter } from 'lucide-react-native'
 
 export default function ProductsScreen() {
+  const [modalVisible, setModalVisible] = useState(false)
+
   const products = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 
   function handleProfile() {
     router.navigate('/(tabs)/profile')
   }
 
+  function handleFilter() {
+    setModalVisible(true)
+  }
+
   return (
     <View flex={1} gap={'$3'} bg={'$background'}>
+      <Modal isOpen={modalVisible} onClose={() => setModalVisible(false)} />
+
       <View
         pt="$16"
         px={'$6'}
@@ -57,7 +67,7 @@ export default function ProductsScreen() {
               <Input id="search" icon={Search} placeholder="Pesquisar" />
             </View>
 
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleFilter}>
               <View
                 borderWidth={1}
                 borderColor="$orangeBase"
