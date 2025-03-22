@@ -11,6 +11,7 @@ import { LucideIcon } from 'lucide-react-native'
 type Props = ComponentProps<typeof GluestackButton> & {
   title: string
   icon?: LucideIcon
+  fontSize?: number
   isLoading?: boolean
 }
 
@@ -18,13 +19,16 @@ export function Button({
   title,
   variant = 'solid',
   icon,
+  width,
+  height,
+  fontSize,
   isLoading = false,
   ...props
 }: Props) {
   return (
     <GluestackButton
-      w="$full"
-      h={56}
+      w={width || '$full'}
+      h={height || 56}
       gap={12}
       px={20}
       bg={variant === 'outline' ? 'transparent' : '$orangeBase'}
@@ -48,7 +52,7 @@ export function Button({
           <Text
             color={variant === 'outline' ? '$orangeBase' : '$white'}
             fontFamily="$action"
-            fontSize="$md"
+            fontSize={fontSize || '$md'}
           >
             {title}
           </Text>
@@ -57,7 +61,7 @@ export function Button({
             <Icon
               as={icon}
               color={variant === 'outline' ? '$orangeBase' : '$white'}
-              size="lg"
+              size={'lg'}
             />
           )}
         </HStack>

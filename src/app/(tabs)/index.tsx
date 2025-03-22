@@ -75,7 +75,9 @@ export default function ProductsScreen() {
         <FlatList
           data={products}
           keyExtractor={(item) => item}
-          renderItem={() => <ProductCard />}
+          renderItem={(item) => (
+            <ProductCard onPress={() => router.push(`/product/${item}`)} />
+          )}
           numColumns={2}
           columnWrapperStyle={{
             gap: '8%',

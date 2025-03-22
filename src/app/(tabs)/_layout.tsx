@@ -39,13 +39,6 @@ export default function TabsLayout() {
           tabBarLabel: 'Perfil',
         }}
       />
-
-      {/* <Tabs.Screen
-        name="product"
-        options={{
-          tabBarButton: () => null,
-        }}
-      /> */}
     </Tabs>
   )
 }
