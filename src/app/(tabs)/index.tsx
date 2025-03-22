@@ -14,7 +14,7 @@ export default function ProductsScreen() {
   }
 
   return (
-    <View flex={1} gap={'$3'}>
+    <View flex={1} gap={'$3'} bg={'$background'}>
       <View
         pt="$16"
         px={'$6'}

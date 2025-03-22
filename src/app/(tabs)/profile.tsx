@@ -12,7 +12,7 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
-      <View flex={1}>
+      <View flex={1} bg={'$background'}>
         <View position="relative">
           <Center mt="$16" mb="$8">
             <UserPhoto width={120} height={120} alt="Imagem do usuário" />

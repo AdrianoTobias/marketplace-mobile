@@ -8,7 +8,7 @@ export default function ProductDetails() {
   function handlePhoneContact() {}
 
   return (
-    <View flex={1}>
+    <View flex={1} bg={'$background'}>
       <View flex={1} gap={'$4'} px={'$6'} mt="$16">
         <TouchableOpacity onPress={handleGoBack}>
           <View flexDirection="row" gap={'$2'} p={2} alignItems="flex-end">

@@ -15,7 +15,10 @@ export default function SignInASDScreen() {
   }
 
   return (
-    <ScrollView width={'$full'} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      showsVerticalScrollIndicator={false}
+    >
       <VStack flex={1} width={'$full'} bg="$white">
         <Center my="$16" gap={'$8'}>
           <Logo width={64} height={48} />
@@ -58,7 +61,7 @@ export default function SignInASDScreen() {
           <Button title="Acessar" icon={MoveRight} onPress={handleSignIn} />
         </VStack>
 
-        <VStack flex={1} px={'$10'} gap={20} marginTop={140} marginBottom="$2">
+        <VStack flex={1} px={'$10'} gap={20} marginTop={140} marginBottom="$10">
           <Text color="$gray300" fontSize={'$body_md'}>
             Ainda não tem uma conta?
           </Text>
