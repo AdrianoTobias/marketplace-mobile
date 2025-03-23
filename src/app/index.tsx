@@ -4,9 +4,34 @@ import Logo from '@assets/logo.svg'
 import { Input } from '@components/Input'
 import { Button } from '@components/Button'
 import { Mail, KeyRound, MoveRight } from 'lucide-react-native'
+import { Controller, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import z from 'zod'
 
-export default function SignInASDScreen() {
-  function handleSignIn() {
+const signInFormSchema = z.object({
+  email: z
+    .string({
+      required_error: 'Informe o seu e-mail',
+    })
+    .email('E-mail inválido'),
+  password: z
+    .string({
+      required_error: 'Informe a senha',
+    })
+    .min(1, 'Informe a senha'),
+})
+
+type SignInForm = z.infer<typeof signInFormSchema>
+
+export default function SignInScreen() {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignInForm>({ resolver: zodResolver(signInFormSchema) })
+
+  function handleSignIn({ email, password }: SignInForm) {
+    console.log({ email, password })
     router.replace('/(tabs)')
   }
 
@@ -40,28 +65,59 @@ export default function SignInASDScreen() {
 
         <VStack flex={1} px={'$10'} gap={'$10'}>
           <Center gap="$5">
-            <Input
-              label="E-mail"
-              id="mail"
-              icon={Mail}
-              placeholder="mail@exemplo.br"
-              keyboardType="email-address"
-              autoCapitalize="none"
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  variant="underlined"
+                  label="E-mail"
+                  icon={Mail}
+                  placeholder="mail@exemplo.br"
+                  onChangeText={onChange}
+                  value={value}
+                  errorMessage={errors.email?.message}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              )}
             />
-            <Input
-              label="Senha"
-              id="password"
-              type="password"
-              icon={KeyRound}
-              placeholder="Sua senha"
-              secureTextEntry
+
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  variant="underlined"
+                  label="Senha"
+                  type="password"
+                  icon={KeyRound}
+                  placeholder="Sua senha"
+                  onChangeText={onChange}
+                  value={value}
+                  errorMessage={errors.password?.message}
+                  onSubmitEditing={handleSubmit(handleSignIn)}
+                  returnKeyType="send"
+                />
+              )}
             />
           </Center>
 
-          <Button title="Acessar" icon={MoveRight} onPress={handleSignIn} />
+          <Button
+            title="Acessar"
+            icon={MoveRight}
+            onPress={handleSubmit(handleSignIn)}
+          />
         </VStack>
 
-        <VStack flex={1} px={'$10'} gap={20} marginTop={140} marginBottom="$10">
+        <VStack
+          flex={1}
+          px={'$10'}
+          gap={20}
+          justifyContent="flex-end"
+          marginTop={80}
+          marginBottom="$10"
+        >
           <Text color="$gray300" fontSize={'$body_md'}>
             Ainda não tem uma conta?
           </Text>
