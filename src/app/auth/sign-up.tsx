@@ -7,11 +7,65 @@ import { UserPhoto } from '@components/UserPhoto'
 import { TouchableOpacity } from 'react-native'
 import { User, Phone, Mail, KeyRound, MoveRight } from 'lucide-react-native'
 import { useUserPhoto } from '@hooks/useUserPhoto'
+import { Controller, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import z from 'zod'
+
+const phoneRegex = /^\d{10,11}$/ // Entre 10 e 11 dígitos
+
+const signUpFormSchema = z
+  .object({
+    fullName: z
+      .string({
+        required_error: 'Informe o seu nome completo',
+      })
+      .min(3, 'Informe o seu nome completo'),
+    phone: z
+      .string({
+        required_error: 'Informe o seu telefone',
+      })
+      .regex(phoneRegex, 'Telefone inválido'),
+    email: z
+      .string({
+        required_error: 'Informe o seu e-mail',
+      })
+      .email('E-mail inválido'),
+    password: z
+      .string({
+        required_error: 'Informe uma senha',
+      })
+      .min(3, 'A senha deve ter pelo menos 3 caracteres'),
+    passwordConfirmation: z
+      .string({
+        required_error: 'Confirme a senha',
+      })
+      .min(1, 'Confirme a senha'),
+  })
+  .refine((data) => data.password === data.passwordConfirmation, {
+    path: ['passwordConfirmation'],
+    message: 'As senhas não coincidem',
+  })
+
+type SignUpForm = z.infer<typeof signUpFormSchema>
 
 export default function SignUpScreen() {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignUpForm>({ resolver: zodResolver(signUpFormSchema) })
+
   const { userPhoto, handleUserPhotoSelect } = useUserPhoto()
 
-  function handleSignUp() {}
+  function handleSignUp({
+    fullName,
+    phone,
+    email,
+    password,
+    passwordConfirmation,
+  }: SignUpForm) {
+    console.log({ fullName, phone, email, password, passwordConfirmation })
+  }
 
   function handleSignIn() {
     router.navigate('/')
@@ -49,18 +103,39 @@ export default function SignUpScreen() {
                 alt="Imagem do usuário"
               />
             </TouchableOpacity>
-            <Input
-              label="Nome"
-              id="name"
-              icon={User}
-              placeholder="Seu nome completo"
+
+            <Controller
+              control={control}
+              name="fullName"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  variant="underlined"
+                  label="Nome"
+                  id="fullName"
+                  icon={User}
+                  placeholder="Seu nome completo"
+                  onChangeText={onChange}
+                  value={value}
+                  errorMessage={errors.fullName?.message}
+                />
+              )}
             />
-            <Input
-              label="Telefone"
-              id="phone"
-              icon={Phone}
-              placeholder="(00) 00000-0000"
-              keyboardType="phone-pad"
+
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  variant="underlined"
+                  label="Telefone"
+                  icon={Phone}
+                  placeholder="(00) 00000-0000"
+                  onChangeText={onChange}
+                  value={value}
+                  errorMessage={errors.phone?.message}
+                  keyboardType="phone-pad"
+                />
+              )}
             />
           </Center>
 
@@ -74,33 +149,66 @@ export default function SignUpScreen() {
               Acesso
             </Text>
 
-            <Input
-              label="E-mail"
-              id="mail"
-              icon={Mail}
-              placeholder="mail@exemplo.br"
-              keyboardType="email-address"
-              autoCapitalize="none"
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  variant="underlined"
+                  label="E-mail"
+                  icon={Mail}
+                  placeholder="mail@exemplo.br"
+                  onChangeText={onChange}
+                  value={value}
+                  errorMessage={errors.email?.message}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              )}
             />
-            <Input
-              label="Senha"
-              id="password"
-              type="password"
-              icon={KeyRound}
-              placeholder="Sua senha"
-              secureTextEntry
+
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  variant="underlined"
+                  label="Senha"
+                  type="password"
+                  icon={KeyRound}
+                  placeholder="Sua senha"
+                  onChangeText={onChange}
+                  value={value}
+                  errorMessage={errors.password?.message}
+                />
+              )}
             />
-            <Input
-              label="Confirmar senha"
-              id="passwordConfirmation"
-              type="password"
-              icon={KeyRound}
-              placeholder="Confirme a senha"
-              secureTextEntry
+
+            <Controller
+              control={control}
+              name="passwordConfirmation"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  variant="underlined"
+                  label="Confirmar senha"
+                  type="password"
+                  icon={KeyRound}
+                  placeholder="Confirme a senha"
+                  onChangeText={onChange}
+                  value={value}
+                  errorMessage={errors.passwordConfirmation?.message}
+                  onSubmitEditing={handleSubmit(handleSignUp)}
+                  returnKeyType="send"
+                />
+              )}
             />
           </VStack>
 
-          <Button title="Cadastrar" icon={MoveRight} onPress={handleSignUp} />
+          <Button
+            title="Cadastrar"
+            icon={MoveRight}
+            onPress={handleSubmit(handleSignUp)}
+          />
         </VStack>
 
         <VStack flex={1} px={'$10'} gap={20} marginTop={70} marginBottom="$10">
