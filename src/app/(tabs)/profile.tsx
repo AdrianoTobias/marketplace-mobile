@@ -3,9 +3,12 @@ import { TouchableOpacity } from 'react-native'
 import { UserPhoto } from '@components/UserPhoto'
 import { Button } from '@components/Button'
 import { Input } from '@components/Input'
+import { useUserPhoto } from '@hooks/useUserPhoto'
 import { LogOut, User, Phone, Mail, KeyRound } from 'lucide-react-native'
 
 export default function ProfileScreen() {
+  const { userPhoto, handleUserPhotoSelect } = useUserPhoto()
+
   function handleLogOut() {}
 
   function handleUpdateProfile() {}
@@ -15,7 +18,14 @@ export default function ProfileScreen() {
       <View flex={1} bg={'$background'}>
         <View position="relative">
           <Center mt="$16" mb="$8">
-            <UserPhoto width={120} height={120} alt="Imagem do usuário" />
+            <TouchableOpacity onPress={handleUserPhotoSelect}>
+              <UserPhoto
+                width={120}
+                height={120}
+                source={userPhoto && { uri: userPhoto }}
+                alt="Imagem do usuário"
+              />
+            </TouchableOpacity>
             <View position="absolute" top={0} right={24}>
               <TouchableOpacity onPress={handleLogOut}>
                 <View

@@ -1,68 +1,15 @@
 import { router } from 'expo-router'
-import {
-  Center,
-  Heading,
-  ScrollView,
-  Text,
-  useToast,
-  VStack,
-} from '@gluestack-ui/themed'
+import { Center, Heading, ScrollView, Text, VStack } from '@gluestack-ui/themed'
 import Logo from '@assets/logo.svg'
 import { Button } from '@components/Button'
 import { Input } from '@components/Input'
 import { UserPhoto } from '@components/UserPhoto'
-import { ToastMessage } from '@components/ToastMessage'
 import { TouchableOpacity } from 'react-native'
-import { useState } from 'react'
 import { User, Phone, Mail, KeyRound, MoveRight } from 'lucide-react-native'
-import * as ImagePicker from 'expo-image-picker'
-import * as FileSystem from 'expo-file-system'
+import { useUserPhoto } from '@hooks/useUserPhoto'
 
 export default function SignUpScreen() {
-  const [userPhoto, setUserPhoto] = useState('')
-
-  const toast = useToast()
-
-  async function handleUserPhotoSelect() {
-    try {
-      const photoSelected = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 1,
-        aspect: [4, 4],
-        allowsEditing: true,
-      })
-
-      if (photoSelected.canceled) {
-        return
-      }
-
-      const photoUri = photoSelected.assets[0].uri
-
-      if (photoUri) {
-        const photoInfo = (await FileSystem.getInfoAsync(photoUri)) as {
-          size: number
-        }
-
-        if (photoInfo.size && photoInfo.size / 1024 / 1024 > 5) {
-          return toast.show({
-            placement: 'top',
-            render: ({ id }) => (
-              <ToastMessage
-                id={id}
-                action="info"
-                title="Essa imagem é muito grande. Escolha uma de até 5MB."
-                onClose={() => toast.close(id)}
-              />
-            ),
-          })
-        }
-
-        setUserPhoto(photoSelected.assets[0].uri)
-      }
-    } catch (error) {
-      console.log(error)
-    }
-  }
+  const { userPhoto, handleUserPhotoSelect } = useUserPhoto()
 
   function handleSignUp() {}
 
