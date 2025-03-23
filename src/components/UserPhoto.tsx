@@ -14,7 +14,7 @@ export function UserPhoto({ source, width, height, ...props }: Props) {
       overflow="hidden"
     >
       {source ? (
-        <Image source={source} {...props} />
+        <Image source={source} {...props} size="full" />
       ) : (
         <Center flex={1}>
           <Icon as={ImageUp} size="xl" color="$orangeBase" />
