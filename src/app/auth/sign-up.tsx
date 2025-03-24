@@ -1,8 +1,16 @@
 import { router } from 'expo-router'
-import { Center, Heading, ScrollView, Text, VStack } from '@gluestack-ui/themed'
+import {
+  Center,
+  Heading,
+  ScrollView,
+  Text,
+  useToast,
+  VStack,
+} from '@gluestack-ui/themed'
 import Logo from '@assets/logo.svg'
 import { Button } from '@components/Button'
 import { Input } from '@components/Input'
+import { ToastMessage } from '@components/ToastMessage'
 import { UserPhoto } from '@components/UserPhoto'
 import { TouchableOpacity } from 'react-native'
 import { User, Phone, Mail, KeyRound, MoveRight } from 'lucide-react-native'
@@ -10,12 +18,14 @@ import { useUserPhoto } from '@hooks/useUserPhoto'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import z from 'zod'
+import { api } from '@services/api'
+import { AppError } from '@utils/AppError'
 
 const phoneRegex = /^\d{10,11}$/ // Entre 10 e 11 dígitos
 
 const signUpFormSchema = z
   .object({
-    fullName: z
+    name: z
       .string({
         required_error: 'Informe o seu nome completo',
       })
@@ -49,6 +59,8 @@ const signUpFormSchema = z
 type SignUpForm = z.infer<typeof signUpFormSchema>
 
 export default function SignUpScreen() {
+  const toast = useToast()
+
   const {
     control,
     handleSubmit,
@@ -57,14 +69,41 @@ export default function SignUpScreen() {
 
   const { userPhoto, handleUserPhotoSelect } = useUserPhoto()
 
-  function handleSignUp({
-    fullName,
+  async function handleSignUp({
+    name,
     phone,
     email,
     password,
     passwordConfirmation,
   }: SignUpForm) {
-    console.log({ fullName, phone, email, password, passwordConfirmation })
+    try {
+      const response = await api.post('/sellers', {
+        name,
+        phone,
+        email,
+        password,
+        passwordConfirmation,
+      })
+      console.log(response.data)
+    } catch (error) {
+      const isAppError = error instanceof AppError
+
+      const title = isAppError
+        ? error.message
+        : 'Não foi possível cadastrar. Tente novamente mais tarde.'
+
+      toast.show({
+        placement: 'top',
+        render: ({ id }) => (
+          <ToastMessage
+            id={id}
+            action="error"
+            title={title}
+            onClose={() => toast.close(id)}
+          />
+        ),
+      })
+    }
   }
 
   function handleSignIn() {
@@ -106,17 +145,17 @@ export default function SignUpScreen() {
 
             <Controller
               control={control}
-              name="fullName"
+              name="name"
               render={({ field: { onChange, value } }) => (
                 <Input
                   variant="underlined"
                   label="Nome"
-                  id="fullName"
+                  id="name"
                   icon={User}
                   placeholder="Seu nome completo"
                   onChangeText={onChange}
                   value={value}
-                  errorMessage={errors.fullName?.message}
+                  errorMessage={errors.name?.message}
                 />
               )}
             />
