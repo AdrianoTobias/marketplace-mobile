@@ -1,8 +1,19 @@
 import { router } from 'expo-router'
-import { Center, Heading, ScrollView, Text, VStack } from '@gluestack-ui/themed'
+import { useState } from 'react'
+import {
+  Center,
+  Heading,
+  ScrollView,
+  Text,
+  useToast,
+  VStack,
+} from '@gluestack-ui/themed'
 import Logo from '@assets/logo.svg'
 import { Input } from '@components/Input'
 import { Button } from '@components/Button'
+import { ToastMessage } from '@components/ToastMessage'
+import { useAuth } from '@hooks/useAuth'
+import { AppError } from '@utils/AppError'
 import { Mail, KeyRound, MoveRight } from 'lucide-react-native'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -24,15 +35,44 @@ const signInFormSchema = z.object({
 type SignInForm = z.infer<typeof signInFormSchema>
 
 export default function SignInScreen() {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const { signIn } = useAuth()
+
+  const toast = useToast()
+
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm<SignInForm>({ resolver: zodResolver(signInFormSchema) })
 
-  function handleSignIn({ email, password }: SignInForm) {
-    console.log({ email, password })
-    router.replace('/(tabs)')
+  async function handleSignIn({ email, password }: SignInForm) {
+    try {
+      setIsLoading(true)
+
+      await signIn(email, password)
+    } catch (error) {
+      const isAppError = error instanceof AppError
+
+      const title = isAppError
+        ? error.message
+        : 'Não foi possível entrar. Tente novamente mais tarde.'
+
+      toast.show({
+        placement: 'top',
+        render: ({ id }) => (
+          <ToastMessage
+            id={id}
+            action="error"
+            title={title}
+            onClose={() => toast.close(id)}
+          />
+        ),
+      })
+
+      setIsLoading(false)
+    }
   }
 
   function handleSignUp() {
@@ -107,6 +147,7 @@ export default function SignInScreen() {
             title="Acessar"
             icon={MoveRight}
             onPress={handleSubmit(handleSignIn)}
+            isLoading={isLoading}
           />
         </VStack>
 

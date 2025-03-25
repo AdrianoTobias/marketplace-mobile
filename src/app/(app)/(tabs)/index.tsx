@@ -14,7 +14,7 @@ export default function ProductsScreen() {
   const products = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 
   function handleProfile() {
-    router.navigate('/(tabs)/profile')
+    router.navigate('/(app)/(tabs)/profile')
   }
 
   function handleFilter() {
