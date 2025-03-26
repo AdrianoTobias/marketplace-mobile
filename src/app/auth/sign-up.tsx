@@ -1,4 +1,5 @@
 import { router } from 'expo-router'
+import { useState } from 'react'
 import {
   Center,
   Heading,
@@ -15,6 +16,7 @@ import { UserPhoto } from '@components/UserPhoto'
 import { TouchableOpacity } from 'react-native'
 import { User, Phone, Mail, KeyRound, MoveRight } from 'lucide-react-native'
 import { useUserPhoto } from '@hooks/useUserPhoto'
+import { useAuth } from '@hooks/useAuth'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import z from 'zod'
@@ -59,7 +61,10 @@ const signUpFormSchema = z
 type SignUpForm = z.infer<typeof signUpFormSchema>
 
 export default function SignUpScreen() {
+  const [isLoading, setIsLoading] = useState(false)
+
   const toast = useToast()
+  const { signIn } = useAuth()
 
   const {
     control,
@@ -77,15 +82,20 @@ export default function SignUpScreen() {
     passwordConfirmation,
   }: SignUpForm) {
     try {
-      const response = await api.post('/sellers', {
+      setIsLoading(true)
+
+      await api.post('/sellers', {
         name,
         phone,
         email,
         password,
         passwordConfirmation,
       })
-      console.log(response.data)
+      await signIn(email, password)
+      router.navigate('/')
     } catch (error) {
+      setIsLoading(false)
+
       const isAppError = error instanceof AppError
 
       const title = isAppError
@@ -107,7 +117,7 @@ export default function SignUpScreen() {
   }
 
   function handleSignIn() {
-    router.navigate('/')
+    router.navigate('/auth/sign-in')
   }
 
   return (
@@ -247,6 +257,7 @@ export default function SignUpScreen() {
             title="Cadastrar"
             icon={MoveRight}
             onPress={handleSubmit(handleSignUp)}
+            isLoading={isLoading}
           />
         </VStack>
 
