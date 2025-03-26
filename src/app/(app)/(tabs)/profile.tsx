@@ -4,6 +4,7 @@ import { UserPhoto } from '@components/UserPhoto'
 import { Button } from '@components/Button'
 import { Input } from '@components/Input'
 import { useUserPhoto } from '@hooks/useUserPhoto'
+import { useAuth } from '@hooks/useAuth'
 import { LogOut, User, Phone, Mail, KeyRound } from 'lucide-react-native'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -59,8 +60,7 @@ export default function ProfileScreen() {
   } = useForm<ProfileForm>({ resolver: zodResolver(profileFormSchema) })
 
   const { userPhoto, handleUserPhotoSelect } = useUserPhoto()
-
-  function handleLogOut() {}
+  const { signOut } = useAuth()
 
   function handleUpdateProfile({
     fullName,
@@ -94,7 +94,7 @@ export default function ProfileScreen() {
               />
             </TouchableOpacity>
             <View position="absolute" top={0} right={24}>
-              <TouchableOpacity onPress={handleLogOut}>
+              <TouchableOpacity onPress={signOut}>
                 <View
                   borderWidth={1}
                   borderColor="$redDanger"
