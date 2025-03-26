@@ -6,9 +6,12 @@ import { UserPhoto } from '@components/UserPhoto'
 import { Input } from '@components/Input'
 import { ProductCard } from '@components/ProductCard'
 import { Modal } from '@components/Modal'
-import { MoveRight, Search, Filter } from 'lucide-react-native'
+import { useAuth } from '@hooks/useAuth'
+import { MoveRight, Search, Filter, User } from 'lucide-react-native'
 
 export default function ProductsScreen() {
+  const { seller } = useAuth()
+
   const [modalVisible, setModalVisible] = useState(false)
 
   const products = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
@@ -34,11 +37,29 @@ export default function ProductsScreen() {
         borderRadius={20}
       >
         <View flexDirection="row" gap={20}>
-          <UserPhoto width={56} height={56} alt="Imagem do usuário" />
+          {seller.avatar ? (
+            <UserPhoto
+              source={seller.avatar}
+              width={56}
+              height={56}
+              alt="Imagem do usuário"
+            />
+          ) : (
+            <View
+              width={56}
+              height={56}
+              rounded={12}
+              backgroundColor="$shape"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Icon as={User} size="xl" color="$orangeBase" />
+            </View>
+          )}
 
           <View gap={4} justifyContent="center">
             <Text color="$gray500" fontFamily="$heading" fontSize={'$title_sm'}>
-              Olá, Adriano!
+              Olá, {seller.name}!
             </Text>
 
             <TouchableOpacity onPress={handleProfile}>
