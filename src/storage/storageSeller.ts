@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { SellerDTO } from '@dtos/SellerDTO'
-import { SELLER_STORAGE } from './storageConfig'
+import { SELLER_STORAGE } from '@storage/storageConfig'
 
 export async function storageSellerSave(seller: SellerDTO) {
   await AsyncStorage.setItem(SELLER_STORAGE, JSON.stringify(seller))
