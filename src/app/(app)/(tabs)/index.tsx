@@ -1,13 +1,18 @@
-import { router } from 'expo-router'
-import { useState } from 'react'
+import { router, useFocusEffect } from 'expo-router'
+import { useState, useCallback } from 'react'
 import { TouchableOpacity, FlatList } from 'react-native'
-import { Icon, Text, View } from '@gluestack-ui/themed'
+import { Icon, Text, useToast, View } from '@gluestack-ui/themed'
 import { UserPhoto } from '@components/UserPhoto'
 import { Input } from '@components/Input'
 import { ProductCard } from '@components/ProductCard'
+import { Loading } from '@components/Loading'
 import { Modal } from '@components/Modal'
+import { ToastMessage } from '@components/ToastMessage'
 import { useAuth } from '@hooks/useAuth'
+import { api } from '@services/api'
+import { AppError } from '@utils/AppError'
 import { MoveRight, Search, Filter, User } from 'lucide-react-native'
+import { ProductDTO } from '@dtos/ProductDTO'
 
 export default function ProductsScreen() {
   const {
@@ -16,7 +21,38 @@ export default function ProductsScreen() {
 
   const [modalVisible, setModalVisible] = useState(false)
 
-  const products = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+  const toast = useToast()
+
+  const [products, setProducts] = useState<ProductDTO[]>([])
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true)
+
+  async function fecthProducts() {
+    try {
+      setIsLoadingProducts(true)
+
+      const response = await api.get<{ products: ProductDTO[] }>('/products')
+      setProducts(response.data?.products)
+    } catch (error) {
+      const isAppError = error instanceof AppError
+      const title = isAppError
+        ? error.message
+        : 'Não foi possível carregar os produtos!'
+
+      toast.show({
+        placement: 'top',
+        render: ({ id }) => (
+          <ToastMessage
+            id={id}
+            action="error"
+            title={title}
+            onClose={() => toast.close(id)}
+          />
+        ),
+      })
+    } finally {
+      setIsLoadingProducts(false)
+    }
+  }
 
   function handleProfile() {
     router.navigate('/(app)/(tabs)/profile')
@@ -25,6 +61,12 @@ export default function ProductsScreen() {
   function handleFilter() {
     setModalVisible(true)
   }
+
+  useFocusEffect(
+    useCallback(() => {
+      fecthProducts()
+    }, []),
+  )
 
   return (
     <View flex={1} gap={'$3'} bg={'$background'}>
@@ -41,7 +83,7 @@ export default function ProductsScreen() {
         <View flexDirection="row" gap={20}>
           {seller.avatar ? (
             <UserPhoto
-              source={seller.avatar}
+              source={seller.avatar.url}
               width={56}
               height={56}
               alt="Imagem do usuário"
@@ -104,22 +146,29 @@ export default function ProductsScreen() {
         </View>
       </View>
 
-      <View flex={1} mx={'6%'}>
-        <FlatList
-          data={products}
-          keyExtractor={(item) => item}
-          renderItem={(item) => (
-            <ProductCard onPress={() => router.push(`/product/${item}`)} />
-          )}
-          numColumns={2}
-          columnWrapperStyle={{
-            gap: '8%',
-            width: '40%',
-            marginBottom: 8,
-          }}
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
+      {isLoadingProducts ? (
+        <Loading />
+      ) : (
+        <View flex={1} mx={'6%'}>
+          <FlatList
+            data={products}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <ProductCard
+                onPress={() => router.push(`/product/${item.id}`)}
+                data={item}
+              />
+            )}
+            numColumns={2}
+            columnWrapperStyle={{
+              gap: '8%',
+              width: '40%',
+              marginBottom: 8,
+            }}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      )}
     </View>
   )
 }
