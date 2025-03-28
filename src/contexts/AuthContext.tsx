@@ -41,20 +41,17 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
     api.defaults.headers.common.Authorization = `Bearer ${token}`
   }
 
-  async function storageSellerAndTokenSave(
-    sellerData: SellerDTO,
-    token: string,
-  ) {
+  async function storageSellerAndTokenSave(seller: SellerDTO, token: string) {
     setIsLoadingSellerStorageData(true)
 
-    await storageSellerSave(sellerData)
+    await storageSellerSave(seller)
     await storageAuthTokenSave(token)
 
     setIsLoadingSellerStorageData(false)
   }
 
   async function getSellerProfile() {
-    const response = await api.get<SellerDTO>('/sellers/me')
+    const response = await api.get<{ seller: SellerDTO }>('/sellers/me')
     return response.data
   }
 
@@ -67,10 +64,10 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
       if (token) {
         await authTokenUpdate(token)
 
-        const sellerData = await getSellerProfile()
+        const { seller } = await getSellerProfile()
 
-        setSellerLogged(sellerData)
-        await storageSellerAndTokenSave(sellerData, token)
+        setSellerLogged(seller)
+        await storageSellerAndTokenSave(seller, token)
       }
     } catch (error) {
       const isAppError = error instanceof AppError

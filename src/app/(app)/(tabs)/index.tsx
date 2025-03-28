@@ -15,9 +15,7 @@ import { MoveRight, Search, Filter, User } from 'lucide-react-native'
 import { ProductDTO } from '@dtos/ProductDTO'
 
 export default function ProductsScreen() {
-  const {
-    sellerLogged: { seller },
-  } = useAuth()
+  const { sellerLogged } = useAuth()
 
   const [modalVisible, setModalVisible] = useState(false)
 
@@ -81,9 +79,9 @@ export default function ProductsScreen() {
         borderRadius={20}
       >
         <View flexDirection="row" gap={20}>
-          {seller.avatar ? (
+          {sellerLogged.avatar ? (
             <UserPhoto
-              source={seller.avatar.url}
+              source={sellerLogged.avatar.url}
               width={56}
               height={56}
               alt="Imagem do usuário"
@@ -103,7 +101,7 @@ export default function ProductsScreen() {
 
           <View gap={4} justifyContent="center">
             <Text color="$gray500" fontFamily="$heading" fontSize={'$title_sm'}>
-              Olá, {seller.name}!
+              Olá, {sellerLogged.name}!
             </Text>
 
             <TouchableOpacity onPress={handleProfile}>

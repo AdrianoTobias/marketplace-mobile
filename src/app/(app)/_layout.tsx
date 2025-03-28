@@ -10,7 +10,7 @@ export default function PrivateLayout() {
     return <Loading />
   }
 
-  return sellerLogged?.seller?.id ? (
+  return sellerLogged?.id ? (
     <Stack screenOptions={{ headerShown: false }} />
   ) : (
     <SignInScreen />
