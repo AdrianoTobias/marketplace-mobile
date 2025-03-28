@@ -4,13 +4,13 @@ import SignInScreen from '@app/auth/sign-in'
 import { Loading } from '@components/Loading'
 
 export default function PrivateLayout() {
-  const { seller, isLoadingSellerStorageData } = useAuth()
+  const { sellerLogged, isLoadingSellerStorageData } = useAuth()
 
   if (isLoadingSellerStorageData) {
     return <Loading />
   }
 
-  return seller.id ? (
+  return sellerLogged?.seller?.id ? (
     <Stack screenOptions={{ headerShown: false }} />
   ) : (
     <SignInScreen />

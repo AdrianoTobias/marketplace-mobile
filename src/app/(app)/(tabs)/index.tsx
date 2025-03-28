@@ -10,7 +10,9 @@ import { useAuth } from '@hooks/useAuth'
 import { MoveRight, Search, Filter, User } from 'lucide-react-native'
 
 export default function ProductsScreen() {
-  const { seller } = useAuth()
+  const {
+    sellerLogged: { seller },
+  } = useAuth()
 
   const [modalVisible, setModalVisible] = useState(false)
 

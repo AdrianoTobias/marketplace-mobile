@@ -11,9 +11,12 @@ import {
   storageSellerRemove,
   storageSellerSave,
 } from '@storage/storageSeller'
+import { ToastMessage } from '@components/ToastMessage'
+import { AppError } from '@utils/AppError'
+import { useToast } from '@gluestack-ui/themed'
 
 export type AuthContextDataProps = {
-  seller: SellerDTO
+  sellerLogged: SellerDTO
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   isLoadingSellerStorageData: boolean
@@ -28,14 +31,14 @@ export const AuthContext = createContext<AuthContextDataProps>(
 )
 
 export function AuthContextProvider({ children }: AuthContextProviderProps) {
-  const [seller, setSeller] = useState<SellerDTO>({} as SellerDTO)
+  const [sellerLogged, setSellerLogged] = useState<SellerDTO>({} as SellerDTO)
   const [isLoadingSellerStorageData, setIsLoadingSellerStorageData] =
     useState(true)
 
-  async function sellerAndTokenUpdate(sellerData: SellerDTO, token: string) {
-    api.defaults.headers.common.Authorization = `Bearer ${token}`
+  const toast = useToast()
 
-    setSeller(sellerData)
+  async function authTokenUpdate(token: string) {
+    api.defaults.headers.common.Authorization = `Bearer ${token}`
   }
 
   async function storageSellerAndTokenSave(
@@ -50,27 +53,49 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
     setIsLoadingSellerStorageData(false)
   }
 
+  async function getSellerProfile() {
+    const response = await api.get<SellerDTO>('/sellers/me')
+    return response.data
+  }
+
   async function signIn(email: string, password: string) {
-    const { data } = await api.post('/sellers/sessions', { email, password })
+    try {
+      const { data } = await api.post('/sellers/sessions', { email, password })
 
-    if (data.accessToken) {
-      const seller = {
-        id: '1',
-        name: 'Adriano',
-        phone: '123456789',
-        email: 'adriano@teste.com.br',
-        avatar: '',
+      const token = data.accessToken
+
+      if (token) {
+        await authTokenUpdate(token)
+
+        const sellerData = await getSellerProfile()
+
+        setSellerLogged(sellerData)
+        await storageSellerAndTokenSave(sellerData, token)
       }
+    } catch (error) {
+      const isAppError = error instanceof AppError
+      const title = isAppError
+        ? error.message
+        : 'Não foi possível carregar o perfil!'
 
-      await storageSellerAndTokenSave(seller, data.accessToken)
-      sellerAndTokenUpdate(seller, data.accessToken)
+      toast.show({
+        placement: 'top',
+        render: ({ id }) => (
+          <ToastMessage
+            id={id}
+            action="error"
+            title={title}
+            onClose={() => toast.close(id)}
+          />
+        ),
+      })
     }
   }
 
   async function signOut() {
     setIsLoadingSellerStorageData(true)
 
-    setSeller({} as SellerDTO)
+    setSellerLogged({} as SellerDTO)
     await storageSellerRemove()
     await storageAuthTokenRemove()
 
@@ -84,7 +109,8 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
     const token = await storageAuthTokenGet()
 
     if (token && sellerLogged) {
-      sellerAndTokenUpdate(sellerLogged, token)
+      authTokenUpdate(token)
+      setSellerLogged(sellerLogged)
     }
 
     setIsLoadingSellerStorageData(false)
@@ -96,7 +122,7 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
 
   return (
     <AuthContext.Provider
-      value={{ seller, signIn, signOut, isLoadingSellerStorageData }}
+      value={{ sellerLogged, signIn, signOut, isLoadingSellerStorageData }}
     >
       {children}
     </AuthContext.Provider>
