@@ -17,6 +17,7 @@ export function ProductCard({ data, ...props }: Props) {
             h={96}
             rounded={6}
             source={data?.attachments[0]?.url ? data.attachments[0].url : ''}
+            alt={data.title}
           />
 
           <View gap={2} padding={4}>
