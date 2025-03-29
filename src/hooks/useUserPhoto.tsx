@@ -4,8 +4,19 @@ import * as ImagePicker from 'expo-image-picker'
 import * as FileSystem from 'expo-file-system'
 import { ToastMessage } from '@components/ToastMessage'
 
+type UserPhotoProps = {
+  name?: string
+  uri: string
+  type?: string
+}
+
 export function useUserPhoto() {
-  const [userPhoto, setUserPhoto] = useState('')
+  const [userPhoto, setUserPhoto] = useState<UserPhotoProps>(
+    {} as UserPhotoProps,
+  )
+
+  const [isNewPhoto, setIsNewPhoto] = useState(false)
+
   const toast = useToast()
 
   async function handleUserPhotoSelect() {
@@ -40,7 +51,16 @@ export function useUserPhoto() {
           })
         }
 
-        setUserPhoto(photoUri)
+        const fileExtension = photoUri.split('.').pop()
+
+        const photoFile = {
+          name: `user-photo.${fileExtension}`.toLowerCase(),
+          uri: photoUri,
+          type: photoSelected.assets[0].mimeType!,
+        }
+
+        setUserPhoto(photoFile)
+        setIsNewPhoto(true)
       }
     } catch (error) {
       return toast.show({
@@ -57,5 +77,10 @@ export function useUserPhoto() {
     }
   }
 
-  return { userPhoto, handleUserPhotoSelect }
+  return {
+    userPhoto,
+    handleUserPhotoSelect,
+    isNewPhoto,
+    setIsNewPhoto,
+  }
 }

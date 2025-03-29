@@ -21,6 +21,7 @@ import { LogOut, User, Phone, Mail, KeyRound } from 'lucide-react-native'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import z from 'zod'
+import { AttachmentDTO } from '@dtos/AttachmentDTO'
 
 const phoneRegex = /^\d{10,11}$/ // Entre 10 e 11 dígitos
 
@@ -94,7 +95,8 @@ const profileFormSchema = z
 type ProfileForm = z.infer<typeof profileFormSchema>
 
 export default function ProfileScreen() {
-  const { userPhoto, handleUserPhotoSelect } = useUserPhoto()
+  const { userPhoto, handleUserPhotoSelect, isNewPhoto, setIsNewPhoto } =
+    useUserPhoto()
   const { sellerLogged, signOut, updateSellerLogged } = useAuth()
   const [isUpdating, setIsUpdating] = useState(false)
 
@@ -113,11 +115,47 @@ export default function ProfileScreen() {
     },
   })
 
+  async function uploadAttachments() {
+    const files = new FormData()
+
+    files.append('files', userPhoto as any)
+
+    const response = await api.post<{ attachments: AttachmentDTO[] }>(
+      '/attachments',
+      files,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    )
+
+    return response.data
+  }
+
   async function handleUpdateProfile(data: ProfileForm) {
     try {
       setIsUpdating(true)
 
-      const response = await api.put<{ seller: SellerDTO }>('/sellers', data)
+      let avatarId = ''
+
+      if (isNewPhoto) {
+        const uploadedPhoto = await uploadAttachments()
+
+        const attachmentId = uploadedPhoto?.attachments[0]?.id
+
+        if (!attachmentId) {
+          throw new Error()
+        }
+
+        avatarId = attachmentId
+        setIsNewPhoto(false)
+      }
+
+      const response = await api.put<{ seller: SellerDTO }>(
+        '/sellers',
+        data && avatarId ? { avatarId, ...data } : data,
+      )
 
       const sellerLoggedUpdated = response.data?.seller
       updateSellerLogged(sellerLoggedUpdated)
@@ -164,7 +202,9 @@ export default function ProfileScreen() {
               <UserPhoto
                 width={120}
                 height={120}
-                source={userPhoto && { uri: userPhoto }}
+                source={
+                  userPhoto?.uri ? userPhoto.uri : sellerLogged?.avatar?.url
+                }
                 alt="Imagem do usuário"
               />
             </TouchableOpacity>
