@@ -1,10 +1,22 @@
-import { Center, Icon, ScrollView, Text, View } from '@gluestack-ui/themed'
+import { useState } from 'react'
+import {
+  Center,
+  Icon,
+  ScrollView,
+  Text,
+  useToast,
+  View,
+} from '@gluestack-ui/themed'
 import { TouchableOpacity } from 'react-native'
 import { UserPhoto } from '@components/UserPhoto'
 import { Button } from '@components/Button'
 import { Input } from '@components/Input'
+import { ToastMessage } from '@components/ToastMessage'
 import { useUserPhoto } from '@hooks/useUserPhoto'
 import { useAuth } from '@hooks/useAuth'
+import { SellerDTO } from '@dtos/SellerDTO'
+import { api } from '@services/api'
+import { AppError } from '@utils/AppError'
 import { LogOut, User, Phone, Mail, KeyRound } from 'lucide-react-native'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -14,7 +26,7 @@ const phoneRegex = /^\d{10,11}$/ // Entre 10 e 11 dígitos
 
 const profileFormSchema = z
   .object({
-    fullName: z
+    name: z
       .string({
         required_error: 'Informe o seu nome completo',
       })
@@ -29,55 +41,118 @@ const profileFormSchema = z
         required_error: 'Informe o seu e-mail',
       })
       .email('E-mail inválido'),
+
     password: z
-      .string({
-        required_error: 'Informe a senha atual',
-      })
-      .min(1, 'Informe a senha atual'),
+      .string()
+      .transform((value) => value || undefined)
+      .optional(),
+
     newPassword: z
-      .string({
-        required_error: 'Informe a nova senha',
-      })
-      .min(3, 'A nova senha deve ter pelo menos 3 caracteres'),
+      .string()
+      .transform((value) => value || undefined)
+      .optional(),
+
     newPasswordConfirmation: z
-      .string({
-        required_error: 'Confirme a nova senha',
-      })
-      .min(1, 'Confirme a nova senha'),
+      .string()
+      .transform((value) => value || undefined)
+      .optional(),
   })
-  .refine((data) => data.newPassword === data.newPasswordConfirmation, {
-    path: ['newPasswordConfirmation'],
-    message: 'A confirmação da nova senha não coincide',
+  .superRefine((data, ctx) => {
+    if (data.newPassword && !data.password) {
+      ctx.addIssue({
+        path: ['password'],
+        message: 'Informe a senha atual',
+        code: 'custom',
+      })
+    }
+
+    if (data.newPassword && data.newPassword.length < 3) {
+      ctx.addIssue({
+        path: ['newPassword'],
+        message: 'A nova senha deve ter pelo menos 3 caracteres',
+        code: 'custom',
+      })
+    }
+
+    if (data.newPassword && !data.newPasswordConfirmation) {
+      ctx.addIssue({
+        path: ['newPasswordConfirmation'],
+        message: 'Confirme a nova senha',
+        code: 'custom',
+      })
+    }
+
+    if (data.newPassword && data.newPassword !== data.newPasswordConfirmation) {
+      ctx.addIssue({
+        path: ['newPasswordConfirmation'],
+        message: 'A confirmação da nova senha não coincide',
+        code: 'custom',
+      })
+    }
   })
 
 type ProfileForm = z.infer<typeof profileFormSchema>
 
 export default function ProfileScreen() {
+  const { userPhoto, handleUserPhotoSelect } = useUserPhoto()
+  const { sellerLogged, signOut, updateSellerLogged } = useAuth()
+  const [isUpdating, setIsUpdating] = useState(false)
+
+  const toast = useToast()
+
   const {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<ProfileForm>({ resolver: zodResolver(profileFormSchema) })
+  } = useForm<ProfileForm>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      name: sellerLogged.name,
+      phone: sellerLogged.phone,
+      email: sellerLogged.email,
+    },
+  })
 
-  const { userPhoto, handleUserPhotoSelect } = useUserPhoto()
-  const { signOut } = useAuth()
+  async function handleUpdateProfile(data: ProfileForm) {
+    try {
+      setIsUpdating(true)
 
-  function handleUpdateProfile({
-    fullName,
-    phone,
-    email,
-    password,
-    newPassword,
-    newPasswordConfirmation,
-  }: ProfileForm) {
-    console.log({
-      fullName,
-      phone,
-      email,
-      password,
-      newPassword,
-      newPasswordConfirmation,
-    })
+      const response = await api.put<{ seller: SellerDTO }>('/sellers', data)
+
+      const sellerLoggedUpdated = response.data?.seller
+      updateSellerLogged(sellerLoggedUpdated)
+
+      toast.show({
+        placement: 'top',
+        render: ({ id }) => (
+          <ToastMessage
+            id={id}
+            action="success"
+            title="Perfil atualizado com sucesso!"
+            onClose={() => toast.close(id)}
+          />
+        ),
+      })
+    } catch (error) {
+      const isAppError = error instanceof AppError
+      const title = isAppError
+        ? error.message
+        : 'Não foi possível atualizar o perfil!'
+
+      toast.show({
+        placement: 'top',
+        render: ({ id }) => (
+          <ToastMessage
+            id={id}
+            action="error"
+            title={title}
+            onClose={() => toast.close(id)}
+          />
+        ),
+      })
+    } finally {
+      setIsUpdating(false)
+    }
   }
 
   return (
@@ -112,7 +187,7 @@ export default function ProfileScreen() {
           <Center gap={'$5'}>
             <Controller
               control={control}
-              name="fullName"
+              name="name"
               render={({ field: { onChange, value } }) => (
                 <Input
                   variant="underlined"
@@ -121,7 +196,7 @@ export default function ProfileScreen() {
                   placeholder="Seu nome completo"
                   onChangeText={onChange}
                   value={value}
-                  errorMessage={errors.fullName?.message}
+                  errorMessage={errors.name?.message}
                 />
               )}
             />
@@ -179,7 +254,7 @@ export default function ProfileScreen() {
                 <Input
                   variant="underlined"
                   label="Senha atual"
-                  id="currentPassword"
+                  type="password"
                   icon={KeyRound}
                   placeholder="Sua senha"
                   onChangeText={onChange}
@@ -229,6 +304,7 @@ export default function ProfileScreen() {
 
           <Button
             title="Atualizar cadastro"
+            isLoading={isUpdating}
             onPress={handleSubmit(handleUpdateProfile)}
           />
         </View>

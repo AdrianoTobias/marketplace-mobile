@@ -109,6 +109,7 @@ export function Input({
             setIsFocused(false)
             onBlur && onBlur()
           }}
+          value={value}
           {...props}
         />
 

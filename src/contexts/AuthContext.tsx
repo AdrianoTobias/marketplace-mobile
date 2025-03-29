@@ -17,6 +17,7 @@ import { useToast } from '@gluestack-ui/themed'
 
 export type AuthContextDataProps = {
   sellerLogged: SellerDTO
+  updateSellerLogged: (sellerLoggedUpdated: SellerDTO) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   isLoadingSellerStorageData: boolean
@@ -53,6 +54,11 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
   async function getSellerProfile() {
     const response = await api.get<{ seller: SellerDTO }>('/sellers/me')
     return response.data
+  }
+
+  async function updateSellerLogged(sellerLoggedUpdated: SellerDTO) {
+    setSellerLogged(sellerLoggedUpdated)
+    await storageSellerSave(sellerLoggedUpdated)
   }
 
   async function signIn(email: string, password: string) {
@@ -119,7 +125,13 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
 
   return (
     <AuthContext.Provider
-      value={{ sellerLogged, signIn, signOut, isLoadingSellerStorageData }}
+      value={{
+        sellerLogged,
+        updateSellerLogged,
+        signIn,
+        signOut,
+        isLoadingSellerStorageData,
+      }}
     >
       {children}
     </AuthContext.Provider>
