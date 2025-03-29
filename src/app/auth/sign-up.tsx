@@ -22,6 +22,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import z from 'zod'
 import { api } from '@services/api'
 import { AppError } from '@utils/AppError'
+import { AttachmentDTO } from '@dtos/AttachmentDTO'
 
 const phoneRegex = /^\d{10,11}$/ // Entre 10 e 11 dígitos
 
@@ -72,7 +73,26 @@ export default function SignUpScreen() {
     formState: { errors },
   } = useForm<SignUpForm>({ resolver: zodResolver(signUpFormSchema) })
 
-  const { userPhoto, handleUserPhotoSelect } = useUserPhoto()
+  const { userPhoto, handleUserPhotoSelect, isNewPhoto, setIsNewPhoto } =
+    useUserPhoto()
+
+  async function uploadAttachments() {
+    const files = new FormData()
+
+    files.append('files', userPhoto as any)
+
+    const response = await api.post<{ attachments: AttachmentDTO[] }>(
+      '/attachments',
+      files,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    )
+
+    return response.data
+  }
 
   async function handleSignUp({
     name,
@@ -84,15 +104,32 @@ export default function SignUpScreen() {
     try {
       setIsLoading(true)
 
+      let avatarId: null | string = null
+
+      if (isNewPhoto) {
+        const uploadedPhoto = await uploadAttachments()
+
+        const attachmentId = uploadedPhoto?.attachments[0]?.id
+
+        if (!attachmentId) {
+          throw new Error()
+        }
+
+        avatarId = attachmentId
+        setIsNewPhoto(false)
+      }
+
       await api.post('/sellers', {
         name,
         phone,
         email,
+        avatarId,
         password,
         passwordConfirmation,
       })
+
       await signIn(email, password)
-      router.navigate('/')
+      router.replace('/')
     } catch (error) {
       setIsLoading(false)
 
@@ -148,7 +185,7 @@ export default function SignUpScreen() {
               <UserPhoto
                 width={120}
                 height={120}
-                source={userPhoto && { uri: userPhoto }}
+                source={userPhoto.uri && { uri: userPhoto.uri }}
                 alt="Imagem do usuário"
               />
             </TouchableOpacity>
