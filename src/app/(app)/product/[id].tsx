@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import { useEffect, useState } from 'react'
-import { TouchableOpacity } from 'react-native'
+import { Linking, TouchableOpacity } from 'react-native'
 import {
   View,
   Text,
@@ -93,7 +93,27 @@ export default function ProductDetailsScreen() {
   function handleGoBack() {
     router.back()
   }
-  function handlePhoneContact() {}
+  function handlePhoneContact() {
+    const phoneNumber = `55${product.owner.phone.replace(/\D/g, '')}`
+    const message = encodeURIComponent(
+      `Olá, ${product.owner.name}! Estou interessado no produto "${product.title}"!`,
+    )
+    const whatsAppUrl = `https://wa.me/${phoneNumber}?text=${message}`
+
+    Linking.openURL(whatsAppUrl).catch(() => {
+      toast.show({
+        placement: 'top',
+        render: ({ id }) => (
+          <ToastMessage
+            id={id}
+            action="error"
+            title={'Não foi possível abrir o WhatsApp!'}
+            onClose={() => toast.close(id)}
+          />
+        ),
+      })
+    })
+  }
 
   useEffect(() => {
     async function fetchProductDetailsScreenData() {
@@ -265,7 +285,7 @@ export default function ProductDetailsScreen() {
 
         <Button
           title="Entrar em contato"
-          width={170}
+          width={172}
           height={40}
           fontSize={14}
           onPress={handlePhoneContact}
