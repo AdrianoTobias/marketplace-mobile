@@ -23,6 +23,7 @@ export function Button({
   height,
   fontSize,
   isLoading = false,
+  isDisabled,
   ...props
 }: Props) {
   return (
@@ -36,7 +37,7 @@ export function Button({
       borderColor="$orangeBase"
       rounded={10}
       $active-bg={variant === 'outline' ? '$light100' : '$orangeDark'}
-      disabled={isLoading}
+      disabled={isDisabled || isLoading}
       {...props}
     >
       {isLoading ? (

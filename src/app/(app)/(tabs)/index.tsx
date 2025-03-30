@@ -1,35 +1,97 @@
-import { router, useFocusEffect } from 'expo-router'
-import { useState, useCallback } from 'react'
+import { router } from 'expo-router'
+import { useState, useEffect, useMemo } from 'react'
 import { TouchableOpacity, FlatList } from 'react-native'
 import { Icon, Text, useToast, View } from '@gluestack-ui/themed'
 import { UserPhoto } from '@components/UserPhoto'
 import { Input } from '@components/Input'
 import { ProductCard } from '@components/ProductCard'
 import { Loading } from '@components/Loading'
-import { Modal } from '@components/Modal'
+import {
+  ProductsFilterModal,
+  ProductsFilterProps,
+} from '@components/ProductsFilterModal'
 import { ToastMessage } from '@components/ToastMessage'
+import { ProductDTO } from '@dtos/ProductDTO'
 import { useAuth } from '@hooks/useAuth'
 import { api } from '@services/api'
 import { AppError } from '@utils/AppError'
+import { priceToCents } from '@utils/priceToCents'
 import { MoveRight, Search, Filter, User } from 'lucide-react-native'
-import { ProductDTO } from '@dtos/ProductDTO'
 
 export default function ProductsScreen() {
   const { sellerLogged } = useAuth()
 
-  const [modalVisible, setModalVisible] = useState(false)
+  const [isModalVisible, setIsModalVisible] = useState(false)
 
   const toast = useToast()
 
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [isLoadingProducts, setIsLoadingProducts] = useState(true)
 
-  async function fecthProducts() {
-    try {
-      setIsLoadingProducts(true)
+  const [search, setSearch] = useState('')
 
+  const defaultFilters: ProductsFilterProps = {
+    minPrice: '',
+    maxPrice: '',
+    categories: [],
+  }
+
+  const [filters, setFilters] = useState<ProductsFilterProps>(defaultFilters)
+
+  const filteredProducts = useMemo(() => {
+    setIsLoadingProducts(true)
+
+    const filterResult = products.filter((product) => {
+      const searchValid =
+        !search ||
+        product.title.toLowerCase().includes(search.toLowerCase()) ||
+        product.description.toLowerCase().includes(search.toLowerCase())
+
+      const priceValid =
+        (!filters.minPrice ||
+          product.priceInCents >= priceToCents(filters.minPrice)) &&
+        (!filters.maxPrice ||
+          product.priceInCents <= priceToCents(filters.maxPrice))
+
+      const categoryValid =
+        filters.categories.length === 0 ||
+        filters.categories.includes(product.category.slug)
+
+      return searchValid && priceValid && categoryValid
+    })
+
+    setIsLoadingProducts(false)
+
+    return filterResult
+  }, [products, search, filters])
+
+  function applyFilters(newFilters: ProductsFilterProps) {
+    setFilters(newFilters)
+    setIsModalVisible(false)
+  }
+
+  function clearFilters() {
+    setFilters(defaultFilters)
+    setIsModalVisible(false)
+  }
+
+  function handleProfile() {
+    router.navigate('/(app)/(tabs)/profile')
+  }
+
+  function handleFilter() {
+    setIsModalVisible(true)
+  }
+
+  useEffect(() => {
+    async function fetchProducts() {
       const response = await api.get<{ products: ProductDTO[] }>('/products')
       setProducts(response.data?.products)
+    }
+
+    try {
+      setIsLoadingProducts(true)
+      fetchProducts()
     } catch (error) {
       const isAppError = error instanceof AppError
       const title = isAppError
@@ -50,25 +112,17 @@ export default function ProductsScreen() {
     } finally {
       setIsLoadingProducts(false)
     }
-  }
-
-  function handleProfile() {
-    router.navigate('/(app)/(tabs)/profile')
-  }
-
-  function handleFilter() {
-    setModalVisible(true)
-  }
-
-  useFocusEffect(
-    useCallback(() => {
-      fecthProducts()
-    }, []),
-  )
+  }, [toast])
 
   return (
     <View flex={1} gap={'$3'} bg={'$background'}>
-      <Modal isOpen={modalVisible} onClose={() => setModalVisible(false)} />
+      <ProductsFilterModal
+        isOpen={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        defaultFilters={filters}
+        onApplyFilters={applyFilters}
+        onClearFilters={clearFilters}
+      />
 
       <View
         pt="$16"
@@ -127,7 +181,13 @@ export default function ProductsScreen() {
 
           <View flexDirection="row" gap={'$4'} alignItems="flex-end">
             <View flex={1}>
-              <Input id="search" icon={Search} placeholder="Pesquisar" />
+              <Input
+                variant="underlined"
+                icon={Search}
+                placeholder="Pesquisar"
+                value={search}
+                onChangeText={setSearch}
+              />
             </View>
 
             <TouchableOpacity onPress={handleFilter}>
@@ -149,7 +209,7 @@ export default function ProductsScreen() {
       ) : (
         <View flex={1} mx={'6%'}>
           <FlatList
-            data={products}
+            data={filteredProducts}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <ProductCard
