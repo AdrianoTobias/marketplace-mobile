@@ -12,6 +12,8 @@ import {
   storageSellerSave,
 } from '@storage/storageSeller'
 import { ToastMessage } from '@components/ToastMessage'
+import { getSellerAccessToken } from '@services/sessionsService'
+import { getSellerProfile } from '@services/sellersService'
 import { AppError } from '@utils/AppError'
 import { useToast } from '@gluestack-ui/themed'
 
@@ -42,6 +44,10 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
     api.defaults.headers.common.Authorization = `Bearer ${token}`
   }
 
+  async function authTokenRemove() {
+    delete api.defaults.headers.common.Authorization
+  }
+
   async function storageSellerAndTokenSave(seller: SellerDTO, token: string) {
     setIsLoadingSellerStorageData(true)
 
@@ -51,11 +57,6 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
     setIsLoadingSellerStorageData(false)
   }
 
-  async function getSellerProfile() {
-    const response = await api.get<{ seller: SellerDTO }>('/sellers/me')
-    return response.data
-  }
-
   async function updateSellerLogged(sellerLoggedUpdated: SellerDTO) {
     setSellerLogged(sellerLoggedUpdated)
     await storageSellerSave(sellerLoggedUpdated)
@@ -63,17 +64,15 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
 
   async function signIn(email: string, password: string) {
     try {
-      const { data } = await api.post('/sellers/sessions', { email, password })
+      const { accessToken } = await getSellerAccessToken({ email, password })
 
-      const token = data.accessToken
-
-      if (token) {
-        await authTokenUpdate(token)
+      if (accessToken) {
+        await authTokenUpdate(accessToken)
 
         const { seller } = await getSellerProfile()
 
         setSellerLogged(seller)
-        await storageSellerAndTokenSave(seller, token)
+        await storageSellerAndTokenSave(seller, accessToken)
       }
     } catch (error) {
       const isAppError = error instanceof AppError
@@ -99,8 +98,11 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
     setIsLoadingSellerStorageData(true)
 
     setSellerLogged({} as SellerDTO)
+
     await storageSellerRemove()
     await storageAuthTokenRemove()
+
+    await authTokenRemove()
 
     setIsLoadingSellerStorageData(false)
   }

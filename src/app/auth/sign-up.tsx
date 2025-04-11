@@ -20,9 +20,9 @@ import { useAuth } from '@hooks/useAuth'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import z from 'zod'
-import { api } from '@services/api'
+import { uploadAttachments } from '@services/attachmentsService'
+import { createSeller } from '@services/sellersService'
 import { AppError } from '@utils/AppError'
-import { AttachmentDTO } from '@dtos/AttachmentDTO'
 
 const phoneRegex = /^\d{10,11}$/ // Entre 10 e 11 dígitos
 
@@ -76,24 +76,6 @@ export default function SignUpScreen() {
   const { userPhoto, handleUserPhotoSelect, isNewPhoto, setIsNewPhoto } =
     useUserPhoto()
 
-  async function uploadAttachments() {
-    const files = new FormData()
-
-    files.append('files', userPhoto as any)
-
-    const response = await api.post<{ attachments: AttachmentDTO[] }>(
-      '/attachments',
-      files,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      },
-    )
-
-    return response.data
-  }
-
   async function handleSignUp({
     name,
     phone,
@@ -107,8 +89,10 @@ export default function SignUpScreen() {
       let avatarId: null | string = null
 
       if (isNewPhoto) {
-        const uploadedPhoto = await uploadAttachments()
+        const files = new FormData()
+        files.append('files', userPhoto as unknown as Blob)
 
+        const uploadedPhoto = await uploadAttachments({ files })
         const attachmentId = uploadedPhoto?.attachments[0]?.id
 
         if (!attachmentId) {
@@ -119,7 +103,7 @@ export default function SignUpScreen() {
         setIsNewPhoto(false)
       }
 
-      await api.post('/sellers', {
+      await createSeller({
         name,
         phone,
         email,

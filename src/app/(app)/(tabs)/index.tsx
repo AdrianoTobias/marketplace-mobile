@@ -13,7 +13,7 @@ import {
 import { ToastMessage } from '@components/ToastMessage'
 import { ProductDTO } from '@dtos/ProductDTO'
 import { useAuth } from '@hooks/useAuth'
-import { api } from '@services/api'
+import { listAllProducts } from '@services/productsService'
 import { AppError } from '@utils/AppError'
 import { priceToCents } from '@utils/priceToCents'
 import { MoveRight, Search, Filter, User } from 'lucide-react-native'
@@ -85,8 +85,8 @@ export default function ProductsScreen() {
 
   useEffect(() => {
     async function fetchProducts() {
-      const response = await api.get<{ products: ProductDTO[] }>('/products')
-      setProducts(response.data?.products)
+      const { products } = await listAllProducts()
+      setProducts(products)
     }
 
     try {

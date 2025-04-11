@@ -21,7 +21,7 @@ import { Button } from '@components/Button'
 import { Loading } from '@components/Loading'
 import { ToastMessage } from '@components/ToastMessage'
 import { CategoryDTO } from '@dtos/CategoryDTO'
-import { api } from '@services/api'
+import { listAllCategories } from '@services/categoriesService'
 import { AppError } from '@utils/AppError'
 import { X } from 'lucide-react-native'
 
@@ -60,11 +60,6 @@ export function ProductsFilterModal({
 
   const toast = useToast()
 
-  async function fetchCategories() {
-    const response = await api.get<{ categories: CategoryDTO[] }>('/categories')
-    return response.data
-  }
-
   function handleFilter(data: ProductsFilterProps) {
     onApplyFilters(data)
   }
@@ -83,7 +78,7 @@ export function ProductsFilterModal({
       try {
         setIsLoadingCategories(true)
 
-        const categoriesData = await fetchCategories()
+        const categoriesData = await listAllCategories()
         setCategories(categoriesData.categories)
       } catch (error) {
         const isAppError = error instanceof AppError

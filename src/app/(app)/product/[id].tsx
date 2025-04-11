@@ -13,7 +13,8 @@ import { Button } from '@components/Button'
 import { Loading } from '@components/Loading'
 import { ToastMessage } from '@components/ToastMessage'
 import { ProductDTO } from '@dtos/ProductDTO'
-import { api } from '@services/api'
+import { countProductViewsInTheLastSevenDays } from '@services/metricsService'
+import { getProductById } from '@services/productsService'
 import { AppError } from '@utils/AppError'
 import { centsToPrice } from '@utils/centsToPrice'
 import { ChartColumn, MoveLeft } from 'lucide-react-native'
@@ -36,8 +37,8 @@ export default function ProductDetailsScreen() {
     try {
       setIsLoadingProductDetails(true)
 
-      const response = await api.get<{ product: ProductDTO }>(`/products/${id}`)
-      setProduct(response.data?.product)
+      const response = await getProductById({ id: String(id) })
+      setProduct(response?.product)
     } catch (error) {
       const isAppError = error instanceof AppError
       const title = isAppError
@@ -64,10 +65,11 @@ export default function ProductDetailsScreen() {
     try {
       setIsLoadingProductViewsInTheLastSevenDays(true)
 
-      const response = await api.get<{ amount: number }>(
-        `/products/${id}/metrics/views`,
-      )
-      setProductViews(response.data?.amount)
+      const response = await countProductViewsInTheLastSevenDays({
+        id: String(id),
+      })
+
+      setProductViews(response?.amount)
     } catch (error) {
       const isAppError = error instanceof AppError
       const title = isAppError

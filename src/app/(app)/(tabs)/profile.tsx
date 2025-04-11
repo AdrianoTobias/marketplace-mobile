@@ -14,14 +14,13 @@ import { Input } from '@components/Input'
 import { ToastMessage } from '@components/ToastMessage'
 import { useUserPhoto } from '@hooks/useUserPhoto'
 import { useAuth } from '@hooks/useAuth'
-import { SellerDTO } from '@dtos/SellerDTO'
-import { api } from '@services/api'
+import { uploadAttachments } from '@services/attachmentsService'
+import { updateCurrentSeller } from '@services/sellersService'
 import { AppError } from '@utils/AppError'
 import { LogOut, User, Phone, Mail, KeyRound } from 'lucide-react-native'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import z from 'zod'
-import { AttachmentDTO } from '@dtos/AttachmentDTO'
 
 const phoneRegex = /^\d{10,11}$/ // Entre 10 e 11 dígitos
 
@@ -75,6 +74,14 @@ const profileFormSchema = z
       })
     }
 
+    if (data.newPassword && data.newPassword === data.password) {
+      ctx.addIssue({
+        path: ['newPassword'],
+        message: 'A nova senha tem que ser diferente da senha atual',
+        code: 'custom',
+      })
+    }
+
     if (data.newPassword && !data.newPasswordConfirmation) {
       ctx.addIssue({
         path: ['newPasswordConfirmation'],
@@ -115,24 +122,6 @@ export default function ProfileScreen() {
     },
   })
 
-  async function uploadAttachments() {
-    const files = new FormData()
-
-    files.append('files', userPhoto as any)
-
-    const response = await api.post<{ attachments: AttachmentDTO[] }>(
-      '/attachments',
-      files,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      },
-    )
-
-    return response.data
-  }
-
   async function handleUpdateProfile(data: ProfileForm) {
     try {
       setIsUpdating(true)
@@ -140,8 +129,10 @@ export default function ProfileScreen() {
       let avatarId = ''
 
       if (isNewPhoto) {
-        const uploadedPhoto = await uploadAttachments()
+        const files = new FormData()
+        files.append('files', userPhoto as unknown as Blob)
 
+        const uploadedPhoto = await uploadAttachments({ files })
         const attachmentId = uploadedPhoto?.attachments[0]?.id
 
         if (!attachmentId) {
@@ -152,12 +143,11 @@ export default function ProfileScreen() {
         setIsNewPhoto(false)
       }
 
-      const response = await api.put<{ seller: SellerDTO }>(
-        '/sellers',
+      const response = await updateCurrentSeller(
         data && avatarId ? { avatarId, ...data } : data,
       )
 
-      const sellerLoggedUpdated = response.data?.seller
+      const sellerLoggedUpdated = response?.seller
       updateSellerLogged(sellerLoggedUpdated)
 
       toast.show({
