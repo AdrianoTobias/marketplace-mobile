@@ -23,6 +23,7 @@ import z from 'zod'
 import { uploadAttachments } from '@services/attachmentsService'
 import { createSeller } from '@services/sellersService'
 import { AppError } from '@utils/AppError'
+import { formatPhone } from '@utils/formatPhone'
 
 const phoneRegex = /^\d{10,11}$/ // Entre 10 e 11 dígitos
 
@@ -200,7 +201,7 @@ export default function SignUpScreen() {
                   label="Telefone"
                   icon={Phone}
                   placeholder="(00) 00000-0000"
-                  onChangeText={onChange}
+                  onChangeText={(text) => onChange(formatPhone(text))}
                   value={value}
                   errorMessage={errors.phone?.message}
                   keyboardType="phone-pad"

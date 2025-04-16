@@ -17,6 +17,7 @@ import { useAuth } from '@hooks/useAuth'
 import { uploadAttachments } from '@services/attachmentsService'
 import { updateCurrentSeller } from '@services/sellersService'
 import { AppError } from '@utils/AppError'
+import { formatPhone } from '@utils/formatPhone'
 import { LogOut, User, Phone, Mail, KeyRound } from 'lucide-react-native'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -117,7 +118,7 @@ export default function ProfileScreen() {
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       name: sellerLogged.name,
-      phone: sellerLogged.phone,
+      phone: formatPhone(sellerLogged.phone),
       email: sellerLogged.email,
     },
   })
@@ -241,7 +242,7 @@ export default function ProfileScreen() {
                   icon={Phone}
                   placeholder="(00) 00000-0000"
                   keyboardType="phone-pad"
-                  onChangeText={onChange}
+                  onChangeText={(text) => onChange(formatPhone(text))}
                   value={value}
                   errorMessage={errors.phone?.message}
                 />
