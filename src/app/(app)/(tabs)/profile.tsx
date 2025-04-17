@@ -23,8 +23,6 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import z from 'zod'
 
-const phoneRegex = /^\d{10,11}$/ // Entre 10 e 11 dígitos
-
 const profileFormSchema = z
   .object({
     name: z
@@ -36,7 +34,15 @@ const profileFormSchema = z
       .string({
         required_error: 'Informe o seu telefone',
       })
-      .regex(phoneRegex, 'Telefone inválido'),
+      .refine(
+        (val) => {
+          const digitsOnly = val.replace(/\D/g, '')
+          return digitsOnly.length === 10 || digitsOnly.length === 11
+        },
+        {
+          message: 'Telefone inválido',
+        },
+      ),
     email: z
       .string({
         required_error: 'Informe o seu e-mail',

@@ -25,8 +25,6 @@ import { createSeller } from '@services/sellersService'
 import { AppError } from '@utils/AppError'
 import { formatPhone } from '@utils/formatPhone'
 
-const phoneRegex = /^\d{10,11}$/ // Entre 10 e 11 dígitos
-
 const signUpFormSchema = z
   .object({
     name: z
@@ -38,7 +36,15 @@ const signUpFormSchema = z
       .string({
         required_error: 'Informe o seu telefone',
       })
-      .regex(phoneRegex, 'Telefone inválido'),
+      .refine(
+        (val) => {
+          const digitsOnly = val.replace(/\D/g, '')
+          return digitsOnly.length === 10 || digitsOnly.length === 11
+        },
+        {
+          message: 'Telefone inválido',
+        },
+      ),
     email: z
       .string({
         required_error: 'Informe o seu e-mail',
