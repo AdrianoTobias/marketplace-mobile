@@ -23,6 +23,7 @@ import { ToastMessage } from '@components/ToastMessage'
 import { CategoryDTO } from '@dtos/CategoryDTO'
 import { listAllCategories } from '@services/categoriesService'
 import { AppError } from '@utils/AppError'
+import { formatCurrency } from '@utils/formatCurrency'
 import { X } from 'lucide-react-native'
 
 export type ProductsFilterProps = {
@@ -151,7 +152,10 @@ export function ProductsFilterModal({
                     <Input
                       variant="underlined"
                       placeholder="De"
-                      onChangeText={onChange}
+                      onChangeText={(text) => {
+                        const masked = formatCurrency(text)
+                        onChange(masked)
+                      }}
                       value={value}
                       keyboardType="number-pad"
                     />
@@ -167,7 +171,10 @@ export function ProductsFilterModal({
                     <Input
                       variant="underlined"
                       placeholder="Até"
-                      onChangeText={onChange}
+                      onChangeText={(text) => {
+                        const masked = formatCurrency(text)
+                        onChange(masked)
+                      }}
                       value={value}
                       keyboardType="number-pad"
                     />
