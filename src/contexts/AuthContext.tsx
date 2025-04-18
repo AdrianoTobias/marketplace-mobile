@@ -45,6 +45,7 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
 
   async function authTokenUpdate(token: string) {
     api.defaults.headers.common.Authorization = `Bearer ${token}`
+    api.defaults.headers.common.Cookie = `accessToken=${token}`
   }
 
   async function authTokenRemove() {
