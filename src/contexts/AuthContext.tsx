@@ -12,7 +12,10 @@ import {
   storageSellerSave,
 } from '@storage/storageSeller'
 import { ToastMessage } from '@components/ToastMessage'
-import { getSellerAccessToken } from '@services/sessionsService'
+import {
+  getSellerAccessToken,
+  signOut as signOutSeller,
+} from '@services/sessionsService'
 import { getSellerProfile } from '@services/sellersService'
 import { AppError } from '@utils/AppError'
 import { useToast } from '@gluestack-ui/themed'
@@ -103,6 +106,8 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) {
     await storageAuthTokenRemove()
 
     await authTokenRemove()
+
+    await signOutSeller()
 
     setIsLoadingSellerStorageData(false)
   }

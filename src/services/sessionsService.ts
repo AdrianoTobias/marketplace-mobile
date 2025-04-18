@@ -20,3 +20,7 @@ export async function getSellerAccessToken({
 
   return response.data
 }
+
+export async function signOut() {
+  await api.post('/sign-out')
+}
